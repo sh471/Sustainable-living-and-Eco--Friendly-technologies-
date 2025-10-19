@@ -3,3 +3,30 @@ sort_by = request.args.get('sort_by', 'created_at')
 sort_col = ALLOWED_SORT.get(sort_by, 'created_at')
 query = f"SELECT * FROM txns ORDER BY {sort_col} LIMIT %s OFFSET %s"
 cur.execute(query, (limit, offset))
+
+try:
+    limit = int(limit)
+    offset = int(offset)
+except (TypeError, ValueError):
+    limit, offset = 50, 0  # sane defaults
+
+ALLOWED_SORT = {
+    'created_at': 'created_at',
+    'amount': 'amount',
+}
+sort_col = ALLOWED_SORT.get(request.args.get('sort_by', '').lower(), 'created_at')
+
+direction = request.args.get('direction', 'asc').lower()
+if direction not in ('asc', 'desc'):
+    direction = 'asc'
+query = f"SELECT * FROM txns ORDER BY {sort_col} {direction} LIMIT %s OFFSET %s"
+cur.execute(query, (limit, offset))
+
+# safe: {sort_col} is whitelisted
+
+def build_sort_query(sort_by, direction, limit, offset):
+    ALLOWED_SORT = {'created_at': 'created_at', 'amount': 'amount'}
+    sort_col = ALLOWED_SORT.get(sort_by.lower(), 'created_at')
+    if direction not in ('asc', 'desc'):
+        direction = 'asc'
+    return f"SELECT * FROM txns ORDER BY {sort_col} {direction} LIMIT %s OFFSET %s", (limit, offset)

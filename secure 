@@ -1,0 +1,5 @@
+ALLOWED_SORT = {'created_at': 'created_at', 'amount': 'amount'}
+sort_by = request.args.get('sort_by', 'created_at')
+sort_col = ALLOWED_SORT.get(sort_by, 'created_at')
+query = f"SELECT * FROM txns ORDER BY {sort_col} LIMIT %s OFFSET %s"
+cur.execute(query, (limit, offset))
